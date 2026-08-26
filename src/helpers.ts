@@ -405,6 +405,7 @@ export function parseTaskDecisionRequest(
 export function buildTaskEnvelope(
   parsed: ParsedResult,
   meta: {
+    task_id: string;
     agent_type: string;
     description: string;
     tool_uses: number;
@@ -416,6 +417,7 @@ export function buildTaskEnvelope(
   return {
     content: [{ type: "text", text: parsed.summary }],
     details: {
+      task_id: meta.task_id,
       agent_type: meta.agent_type,
       description: meta.description,
       tool_uses: meta.tool_uses,

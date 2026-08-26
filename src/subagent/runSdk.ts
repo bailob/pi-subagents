@@ -1,7 +1,10 @@
-import type {
-  AgentSession,
-  ExtensionContext,
-  ModelRegistry,
+import {
+  createAgentSession,
+  DefaultResourceLoader,
+  getAgentDir,
+  type AgentSession,
+  type ExtensionContext,
+  type ModelRegistry,
 } from "@earendil-works/pi-coding-agent";
 import type { AgentConfig } from "../helpers.js";
 
@@ -62,8 +65,6 @@ export async function runSdkSubagent(options: RunSdkSubagentOptions): Promise<{
     throw new Error("No model available for SDK subagent execution");
   }
 
-  const { createAgentSession, DefaultResourceLoader, getAgentDir } =
-    await import("@earendil-works/pi-coding-agent");
   let session: AgentSession | undefined;
   let unsubSession: (() => void) | undefined;
   try {

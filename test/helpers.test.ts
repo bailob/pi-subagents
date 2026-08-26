@@ -190,18 +190,21 @@ import {
   assert.equal(withoutTag.needs_decision, undefined, t + " absent when not emitted");
 
   const envelope = buildTaskEnvelope(r, {
+    task_id: "task-sdk-1",
     agent_type: "general",
     description: "schema decision",
     tool_uses: 1,
     duration_ms: 10,
     background: true,
   });
+  assert.equal(envelope.details.task_id, "task-sdk-1", t + " preserves task identity");
   assert.equal(
     envelope.details.needs_decision,
     r.needs_decision,
     t + " exposed in envelope details",
   );
   const plainEnvelope = buildTaskEnvelope(withoutTag, {
+    task_id: "task-sdk-2",
     agent_type: "general",
     description: "no decision",
     tool_uses: 1,

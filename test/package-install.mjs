@@ -25,7 +25,7 @@ try {
   if (!existsSync(join(localCore, "package.json"))) {
     throw new Error("package install test requires the sibling pi-core checkout");
   }
-  execFileSync("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", localCore, tarball], {
+  execFileSync("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", "--legacy-peer-deps", localCore, tarball], {
     cwd: temporary,
     encoding: "utf8",
     stdio: "inherit",
@@ -39,6 +39,11 @@ try {
   );
   const manifest = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8"));
   const expectedManifest = JSON.parse(await readFile(join(repository, "package.json"), "utf8"));
+  for (const hostPackage of ["pi-coding-agent", "pi-tui"]) {
+    if (existsSync(join(temporary, "node_modules", "@earendil-works", hostPackage))) {
+      throw new Error(`Managed install unexpectedly contains host package: ${hostPackage}`);
+    }
+  }
   if (manifest.version !== expectedManifest.version) {
     throw new Error(`Installed package version mismatch: expected ${expectedManifest.version}, got ${manifest.version}`);
   }
@@ -51,16 +56,34 @@ try {
   ]) {
     if (!existsSync(join(packageRoot, path))) throw new Error(`Packed file missing: ${path}`);
   }
+  const runSdkSource = await readFile(join(packageRoot, "dist/subagent/runSdk.js"), "utf8");
+  if (runSdkSource.includes('import("@earendil-works/pi-coding-agent")')) {
+    throw new Error("SDK fallback contains a native runtime import of the host SDK");
+  }
+
   execFileSync(
     process.execPath,
     [
       "--input-type=module",
       "--eval",
       [
-        'const runtime = await import("@minhduydev/pi-subagents");',
+        'const { discoverAndLoadExtensions } = await import("@earendil-works/pi-coding-agent");',
+        `const loaded = await discoverAndLoadExtensions([${JSON.stringify(packageRoot)}], ${JSON.stringify(temporary)}, ${JSON.stringify(temporary)});`,
+        'if (loaded.errors.length > 0 || loaded.extensions.length !== 1) throw new Error(`Pi loader failed to load managed extension: ${JSON.stringify(loaded.errors)}`);',
+        "process.exit(0);",
+      ].join("\n"),
+    ],
+    { cwd: repository, stdio: "inherit" },
+  );
+
+  execFileSync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "--eval",
+      [
         'const api = await import("@minhduydev/pi-subagents/api");',
         'const replay = await import("@minhduydev/pi-subagents/replay");',
-        'if (typeof runtime.default !== "function") throw new Error("runtime export missing");',
         'if (api.TASK_RPC_PROTOCOL_VERSION !== 3) throw new Error("API export mismatch");',
         'if (typeof replay.listTaskProvenance !== "function") throw new Error("task provenance export missing");',
       ].join("\n"),

@@ -985,6 +985,7 @@ export default function (pi: ExtensionAPI) {
               const parsed = parseResultXml(finalOutput);
               const assessment = assessTaskResult(parsed);
               const envelope = buildTaskEnvelope(parsed, {
+                task_id: id,
                 agent_type: agent.name,
                 description: descText,
                 tool_uses: foregroundTask!.toolUses,
@@ -1225,6 +1226,7 @@ export default function (pi: ExtensionAPI) {
         const durationMs = Date.now() - startedAt;
         const { toolUses, turns } = countToolUses(sessionDir, sessionName);
         const envelope = buildTaskEnvelope(parsed, {
+          task_id: id,
           agent_type: agent.name,
           description: descText,
           tool_uses: toolUses,
@@ -1235,7 +1237,6 @@ export default function (pi: ExtensionAPI) {
           ...envelope,
           details: {
             ...envelope.details,
-            task_id: id,
             phase,
             execution_phase: phase,
             reported_status: assessment.reportedStatus,
