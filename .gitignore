@@ -8,3 +8,7 @@ artifacts/
 
 # Local agent harness state
 .omc/
+
+# pickup-skills: local skill links are machine-specific; pickup.json is committed
+.agents/skills/*
+!.agents/skills/pickup.json
